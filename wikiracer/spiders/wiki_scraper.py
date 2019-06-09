@@ -24,23 +24,21 @@ class spider(scrapy.Spider):
 		end_link = response.text[end_index+6:].split(',')[0]
 		self.end_link = 'https://en.wikipedia.org/wiki/'+end_link.replace('"', '')
 		self.start_urls = [start_link]
+		self.dont_overwrite = False
 	def get_page_name(self, url):
 		return url.replace('https://en.wikipedia.org/wiki/', '')
-
 	def start_requests(self):
 		url = self.start_urls[0]
 		path = self.get_page_name(url)
 		yield scrapy.Request(url=url,
 							callback=self.parse, 
-							meta={'path': path, 'len': 0}, 
+							meta={'path': path}, 
 							errback=self.handle_failure)
-
 	def handle_failure(self, failure):
 		yield scrapy.Request(url=failure.request.url, 
 							callback=self.parse, 
-							meta={'path': failure.request.meta['path'], 'len': failure.request.meta['len']},
+							meta={'path': failure.request.meta['path']},
 							errback=self.handle_failure)
-
 	def parse(self, response):
 		soup = bs(response.text, 'html.parser')
 		links = []
@@ -60,15 +58,15 @@ class spider(scrapy.Spider):
 			if self.get_page_name(link) in path:
 				continue
 			new_path = response.meta['path']+', '+self.get_page_name(link)
-			if link == self.end_link:
+			if link == self.end_link and self.dont_overwrite == False:
 				with open('path.txt', 'w') as outfile:
 					outfile.write(new_path)
 				raise scrapy.exceptions.CloseSpider('Path Found!')
-			if response.meta['len'] < 10:
-				yield scrapy.Request(url=link,
-								callback=self.parse, 
-								meta={'path': new_path, 'len': response.meta['len']+1}, 
-								errback=self.handle_failure)
+				self.dont_overwrite = True
+			yield scrapy.Request(url=link,
+							callback=self.parse, 
+							meta={'path': new_path}, 
+							errback=self.handle_failure)
 
 def find_best_path():
 	process = CrawlerProcess(get_project_settings())
