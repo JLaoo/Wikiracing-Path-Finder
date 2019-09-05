@@ -12,3 +12,6 @@ This script simply takes all links on a wikipedia page that lead to other wikipe
 # To Do
 - Rework into proper Breadth-First search algorithm.
 - Pull info from MediaWiki API instead of parsing entire Wikipedia pages with BeautifulSoup.
+
+# Disclaimer
+- I do not endorse the use of this spider to cheat at the wikigame. The usage of this spider is at the discretion of the user.
